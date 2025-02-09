@@ -26,6 +26,8 @@ def create_driver(profile_name):
         options.add_argument("--disable-extensions")
         options.add_argument("--dns-prefetch-disable")
         options.add_argument("--disable-gpu")
+        # 🔽 Disable pop-up blocking 🔽
+        options.add_argument("--disable-popup-blocking")
 
         driver = uc.Chrome(
             options=options,
@@ -83,39 +85,37 @@ def marketplace_scraper(driver, product_name="used iphone"): # Changed default t
             return  # Exit if no listings found
         print(listings)
         for listing in listings:
+            print("doing this", listing.get_attribute("href"))
             driver.execute_script("window.open(arguments[0]);", listing.get_attribute("href"))
-            time.sleep(3)
+            # 🔽 Increased sleep time 🔽
+            time.sleep(5)
 
         # Switch to each tab and message the seller
         for handle in driver.window_handles[1:]:
             driver.switch_to.window(handle)
             try:
-                # Click "Message" button - Class based (can be improved if needed to be structure based)
-                message_button = driver.find_element(By.XPATH, '//div[contains(text(), "Message")]')
-                message_button.click()
-                time.sleep(2)
-
-                # Click the "Message" button again (redundant, but kept as in original code) - Class based (can be improved if needed to be structure based)
-                message_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, "//div[text()='Message']"))
+                # 1. Click "Send" button - Structure and aria-label basedx
+                send_button = WebDriverWait(driver, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, '//div[@aria-label="Send" and @role="button"]'))
                 )
-                message_button.click()
-                print("Clicked Message button.")
+                send_button.click()
+                print("Clicked 'Send' button on listing page.")
+                time.sleep(2) # Delay after clicking Send button
 
-                # Wait for chat box to appear
-                time.sleep(2)
+                # # 2. Wait for chat box to appear (Reusing existing chat box wait logic)
+                # chat_box = WebDriverWait(driver, 10).until(
+                #     EC.presence_of_element_located((By.XPATH, "//div[@aria-label='Message']"))
+                # )
 
-                # Send an initial message - Class based (aria-label, but can be improved if needed to be structure based)
-                chat_box = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.XPATH, "//div[@aria-label='Message']"))
-                )
-                chat_box.send_keys("Hi! I'm interested in your item. Is it still available? 😊")
-                chat_box.send_keys("\n")  # Simulate pressing Enter
+                # # 3. Send an initial message (Reusing existing message sending logic)
+                # chat_box.send_keys("Hi! I'm interested in your item. Is it still available? 😊")
+                # chat_box.send_keys("\n")  # Simulate pressing Enter
+                # print("Message sent successfully!")
 
-                print("Message sent successfully!")
 
             except Exception as e:
-                print("Error interacting with seller:", e)
+                raise e
+                print(f"Error interacting with seller in listing tab: {e}")
 
             # Close the current tab and switch back
             driver.close()
