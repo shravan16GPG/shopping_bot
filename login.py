@@ -94,12 +94,18 @@ def marketplace_scraper(driver, product_name="used iphone"): # Changed default t
         for handle in driver.window_handles[1:]:
             driver.switch_to.window(handle)
             try:
-                # 1. Click "Send" button - Structure and aria-label basedx
-                send_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, '//div[@aria-label="Send" and @role="button"]'))
-                )
-                send_button.click()
-                print("Clicked 'Send' button on listing page.")
+                # 1. Click "Send" button - Structure and aria-label based
+                
+                # find the sen button normally
+                time.sleep(3)
+                send_message_button = driver.find_element(By.XPATH, '//div[@aria-label="Send" and @role="button"]')
+                print(send_message_button)
+                if send_message_button:
+                    print("Clicked 'Send' button on listing page.")
+                    driver.execute_script("arguments[0].click();", send_message_button)
+                    
+                    # send_message_button.click()
+                
                 time.sleep(2) # Delay after clicking Send button
 
                 # # 2. Wait for chat box to appear (Reusing existing chat box wait logic)
@@ -114,8 +120,8 @@ def marketplace_scraper(driver, product_name="used iphone"): # Changed default t
 
 
             except Exception as e:
-                raise e
                 print(f"Error interacting with seller in listing tab: {e}")
+                raise e
 
             # Close the current tab and switch back
             driver.close()
@@ -123,6 +129,7 @@ def marketplace_scraper(driver, product_name="used iphone"): # Changed default t
 
     except Exception as e:
         print("Error during Marketplace search:", e)
+        raise e
 
 
 def main():
